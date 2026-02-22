@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "171709630151",
+    "project_id": "motioncam-e3830",
+    "storage_bucket": "motioncam-e3830.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:171709630151:android:853f437b461af722bee0e2",
+        "android_client_info": {
+          "package_name": "com.example.motioncam"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA9hGIIW6j8HdGXZfW8H8M6eGHXTLZ9GgU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

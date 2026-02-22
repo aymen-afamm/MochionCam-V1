@@ -214,7 +214,7 @@ fun MotionLines() {
             modifier = Modifier
                 .height(4.dp)
                 .fillMaxWidth()
-                .offset(x = 16.dp)
+                .offset(x = 16.dp, y = 0.dp)
                 .background(
                     brush = Brush.horizontalGradient(
                         colors = listOf(
@@ -233,7 +233,7 @@ fun MotionLines() {
             modifier = Modifier
                 .height(4.dp)
                 .fillMaxWidth()
-                .offset(x = (-16).dp)
+                .offset(x = (-16).dp, y = 0.dp)
                 .background(
                     brush = Brush.horizontalGradient(
                         colors = listOf(
@@ -252,7 +252,7 @@ fun MotionLines() {
             modifier = Modifier
                 .height(4.dp)
                 .fillMaxWidth()
-                .offset(x = 8.dp)
+                .offset(x = 8.dp, y = 0.dp)
                 .background(
                     brush = Brush.horizontalGradient(
                         colors = listOf(

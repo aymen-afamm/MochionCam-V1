@@ -8,10 +8,10 @@
             <InsightsFilterSettings>
               <option name="connection">
                 <ConnectionSetting>
-                  <option name="appId" value="PLACEHOLDER" />
-                  <option name="mobileSdkAppId" value="" />
-                  <option name="projectId" value="" />
-                  <option name="projectNumber" value="" />
+                  <option name="appId" value="com.example.motioncam" />
+                  <option name="mobileSdkAppId" value="1:171709630151:android:853f437b461af722bee0e2" />
+                  <option name="projectId" value="motioncam-e3830" />
+                  <option name="projectNumber" value="171709630151" />
                 </ConnectionSetting>
               </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />
