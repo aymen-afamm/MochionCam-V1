@@ -1,13 +1,16 @@
 package com.example.motioncam
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Fingerprint
-import androidx.compose.material.icons.filled.Login
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Videocam
 import androidx.compose.material.icons.filled.Visibility
@@ -35,108 +38,118 @@ import com.example.motioncam.ui.theme.Primary
 fun LoginScreen(
     onLoginSuccess: () -> Unit = {},
     onSignUpClick: () -> Unit = {},
-    onForgotPasswordClick: () -> Unit = {},
-    modifier: Modifier = Modifier
+    onForgotPasswordClick: () -> Unit = {}
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-    var passwordVisible by remember { mutableStateOf(false) }
-    
+    var isPasswordVisible by remember { mutableStateOf(false) }
+
     Box(
-        modifier = modifier
+        modifier = Modifier
             .fillMaxSize()
             .background(BackgroundDark)
     ) {
-        BackgroundEffects()
-        
+        // Background glow effects
+        BackgroundGlowEffects()
+
+        // Main content - scrollable column with keyboard handling
         Column(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 32.dp)
-                .padding(top = 80.dp, bottom = 48.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Top
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 28.dp)
+                .windowInsetsPadding(WindowInsets.statusBars)
+                .windowInsetsPadding(WindowInsets.ime)
+                .windowInsetsPadding(WindowInsets.navigationBars),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            Spacer(modifier = Modifier.height(80.dp))
+
+            // Header with logo and title
             HeaderSection()
-            
+
             Spacer(modifier = Modifier.height(48.dp))
-            
-            LoginFormSection(
+
+            // Login form fields and buttons
+            LoginFormContent(
                 email = email,
                 onEmailChange = { email = it },
                 password = password,
                 onPasswordChange = { password = it },
-                passwordVisible = passwordVisible,
-                onPasswordVisibilityToggle = { passwordVisible = !passwordVisible },
+                isPasswordVisible = isPasswordVisible,
+                onTogglePasswordVisibility = { isPasswordVisible = !isPasswordVisible },
                 onForgotPasswordClick = onForgotPasswordClick,
                 onLoginClick = onLoginSuccess,
                 onBiometricClick = { }
             )
-            
-            Spacer(modifier = Modifier.weight(1f))
-            
-            FooterSection(
-                onSignUpClick = onSignUpClick
-            )
+
+            // Flexible spacer that works with scrollable content
+            Spacer(modifier = Modifier.height(32.dp))
+
+            // Footer with sign up and security badge
+            FooterSection(onSignUpClick = onSignUpClick)
+
+            Spacer(modifier = Modifier.height(24.dp))
         }
-        
-        DecorativeBottomBar()
     }
 }
 
 @Composable
-fun BackgroundEffects() {
-    Box(
-        modifier = Modifier.fillMaxSize()
-    ) {
+private fun BackgroundGlowEffects() {
+    Box(modifier = Modifier.fillMaxSize()) {
+        // Bottom radial gradient glow
         Box(
             modifier = Modifier
-                .fillMaxSize()
+                .fillMaxWidth()
+                .height(500.dp)
+                .align(Alignment.BottomCenter)
                 .background(
-                    Brush.radialGradient(
+                    brush = Brush.radialGradient(
                         colors = listOf(
-                            Primary.copy(alpha = 0.15f),
+                            Primary.copy(alpha = 0.12f),
                             Color.Transparent
                         ),
-                        center = androidx.compose.ui.geometry.Offset(
-                            x = 0.5f,
-                            y = 1.2f
-                        )
+                        center = androidx.compose.ui.geometry.Offset(0.5f, 1.0f),
+                        radius = 700f
                     )
                 )
         )
-        
+
+        // Top right subtle glow
         Box(
             modifier = Modifier
-                .offset(x = (-80).dp, y = (-80).dp)
-                .size(256.dp)
-                .background(Primary, CircleShape)
-                .blur(100.dp)
+                .offset(x = 60.dp, y = (-40).dp)
+                .size(180.dp)
+                .background(Primary.copy(alpha = 0.06f), CircleShape)
+                .blur(80.dp)
                 .align(Alignment.TopEnd)
         )
-        
+
+        // Left side teal accent glow
         Box(
             modifier = Modifier
-                .offset(x = (-128).dp, y = 0.dp)
-                .size(320.dp)
-                .background(AccentTeal.copy(alpha = 0.2f), CircleShape)
-                .blur(120.dp)
+                .offset(x = (-80).dp, y = (-20).dp)
+                .size(220.dp)
+                .background(AccentTeal.copy(alpha = 0.05f), CircleShape)
+                .blur(90.dp)
                 .align(Alignment.CenterStart)
         )
     }
 }
 
 @Composable
-fun HeaderSection() {
+private fun HeaderSection() {
     Column(
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
+        // Logo circle with video icon
         Box(
             modifier = Modifier
-                .size(80.dp)
+                .size(72.dp)
                 .background(
-                    color = Primary.copy(alpha = 0.1f),
-                    shape = RoundedCornerShape(16.dp)
+                    color = Primary.copy(alpha = 0.15f),
+                    shape = CircleShape
                 ),
             contentAlignment = Alignment.Center
         ) {
@@ -144,97 +157,186 @@ fun HeaderSection() {
                 imageVector = Icons.Default.Videocam,
                 contentDescription = "MotionCam Logo",
                 tint = Primary,
-                modifier = Modifier.size(48.dp)
+                modifier = Modifier.size(36.dp)
             )
         }
-        
-        Spacer(modifier = Modifier.height(8.dp))
-        
+
+        // App title
         Text(
             text = "MotionCam",
-            fontSize = 36.sp,
+            fontSize = 32.sp,
             fontWeight = FontWeight.Bold,
             color = Color.White,
             letterSpacing = (-0.5).sp
         )
-        
-        Spacer(modifier = Modifier.height(16.dp))
-        
+
+        // Tagline - uppercase with letter spacing
         Text(
             text = "SECURE AUTOMOTIVE LOGGING",
-            fontSize = 10.sp,
+            fontSize = 11.sp,
             fontWeight = FontWeight.Medium,
-            color = Primary.copy(alpha = 0.6f),
+            color = Primary,
             letterSpacing = 2.sp
         )
     }
 }
 
 @Composable
-fun LoginFormSection(
+private fun LoginFormContent(
     email: String,
     onEmailChange: (String) -> Unit,
     password: String,
     onPasswordChange: (String) -> Unit,
-    passwordVisible: Boolean,
-    onPasswordVisibilityToggle: () -> Unit,
+    isPasswordVisible: Boolean,
+    onTogglePasswordVisibility: () -> Unit,
     onForgotPasswordClick: () -> Unit,
     onLoginClick: () -> Unit,
     onBiometricClick: () -> Unit
 ) {
     Column(
         modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(24.dp)
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        FloatingLabelTextField(
-            value = email,
-            onValueChange = onEmailChange,
-            label = "EMAIL ADDRESS",
-            placeholder = "driver@motioncam.app",
-            keyboardType = KeyboardType.Email
-        )
-        
-        FloatingLabelPasswordField(
-            value = password,
-            onValueChange = onPasswordChange,
-            label = "PASSWORD",
-            placeholder = "••••••••••••",
-            passwordVisible = passwordVisible,
-            onVisibilityToggle = onPasswordVisibilityToggle
-        )
-        
+        // Email field with label above
+        Column(
+            verticalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            Text(
+                text = "EMAIL ADDRESS",
+                fontSize = 11.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = Color(0xFF8E8E93),
+                letterSpacing = 0.5.sp,
+                modifier = Modifier.padding(start = 4.dp)
+            )
+
+            OutlinedTextField(
+                value = email,
+                onValueChange = onEmailChange,
+                modifier = Modifier.fillMaxWidth(),
+                placeholder = { 
+                    Text(
+                        text = "driver@motioncam.app",
+                        color = Color.White.copy(alpha = 0.3f)
+                    )
+                },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                singleLine = true,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedTextColor = Color.White,
+                    unfocusedTextColor = Color.White,
+                    focusedBorderColor = Color.White.copy(alpha = 0.3f),
+                    unfocusedBorderColor = Color.White.copy(alpha = 0.15f),
+                    cursorColor = Primary,
+                    focusedContainerColor = Color.Transparent,
+                    unfocusedContainerColor = Color.Transparent
+                ),
+                shape = RoundedCornerShape(50.dp),
+                textStyle = androidx.compose.ui.text.TextStyle(
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Normal
+                )
+            )
+        }
+
+        // Password field with label above
+        Column(
+            verticalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            Text(
+                text = "PASSWORD",
+                fontSize = 11.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = Color(0xFF8E8E93),
+                letterSpacing = 0.5.sp,
+                modifier = Modifier.padding(start = 4.dp)
+            )
+
+            OutlinedTextField(
+                value = password,
+                onValueChange = onPasswordChange,
+                modifier = Modifier.fillMaxWidth(),
+                placeholder = { 
+                    Text(
+                        text = "••••••••••••",
+                        color = Color.White.copy(alpha = 0.3f)
+                    )
+                },
+                visualTransformation = if (isPasswordVisible) {
+                    VisualTransformation.None
+                } else {
+                    PasswordVisualTransformation()
+                },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                singleLine = true,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedTextColor = Color.White,
+                    unfocusedTextColor = Color.White,
+                    focusedBorderColor = Color.White.copy(alpha = 0.3f),
+                    unfocusedBorderColor = Color.White.copy(alpha = 0.15f),
+                    cursorColor = Primary,
+                    focusedContainerColor = Color.Transparent,
+                    unfocusedContainerColor = Color.Transparent
+                ),
+                shape = RoundedCornerShape(50.dp),
+                textStyle = androidx.compose.ui.text.TextStyle(
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Normal
+                ),
+                trailingIcon = {
+                    IconButton(
+                        onClick = onTogglePasswordVisibility,
+                        modifier = Modifier.padding(end = 8.dp)
+                    ) {
+                        Icon(
+                            imageVector = if (isPasswordVisible) {
+                                Icons.Default.VisibilityOff
+                            } else {
+                                Icons.Default.Visibility
+                            },
+                            contentDescription = if (isPasswordVisible) "Hide password" else "Show password",
+                            tint = Color(0xFF8E8E93),
+                            modifier = Modifier.size(22.dp)
+                        )
+                    }
+                }
+            )
+        }
+
+        // Forgot password - right aligned, uppercase
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 4.dp),
             horizontalArrangement = Arrangement.End
         ) {
             TextButton(
                 onClick = onForgotPasswordClick,
-                contentPadding = PaddingValues(0.dp)
+                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
             ) {
                 Text(
                     text = "FORGOT PASSWORD?",
-                    fontSize = 10.sp,
+                    fontSize = 11.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = Color(0xFF8E8E93),
                     letterSpacing = 0.5.sp
                 )
             }
         }
-        
-        Spacer(modifier = Modifier.height(16.dp))
-        
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // Login button - red pill with arrow icon
         Button(
             onClick = onLoginClick,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(56.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Primary
-            ),
-            shape = CircleShape,
+                .height(54.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = Primary),
+            shape = RoundedCornerShape(50.dp),
             elevation = ButtonDefaults.buttonElevation(
-                defaultElevation = 8.dp,
-                pressedElevation = 2.dp
+                defaultElevation = 0.dp,
+                pressedElevation = 0.dp
             )
         ) {
             Row(
@@ -242,72 +344,57 @@ fun LoginFormSection(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
-                    imageVector = Icons.Default.Login,
+                    imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                     contentDescription = null,
                     modifier = Modifier.size(20.dp),
                     tint = Color.White
                 )
                 Text(
                     text = "LOGIN",
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color.White,
+                    letterSpacing = 0.5.sp
                 )
             }
         }
-        
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            HorizontalDivider(
-                modifier = Modifier.weight(weight = 1f),
-                color = Color.White.copy(alpha = 0.1f),
-                thickness = 1.dp
-            )
-            Text(
-                text = "OR",
-                fontSize = 10.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF8E8E93)
-            )
-            HorizontalDivider(
-                modifier = Modifier.weight(weight = 1f),
-                color = Color.White.copy(alpha = 0.1f),
-                thickness = 1.dp
-            )
-        }
-        
+
+        // OR divider
+        OrDivider()
+
+        // Biometric button - outlined pill with teal accent
         OutlinedButton(
             onClick = onBiometricClick,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(56.dp),
+                .height(54.dp),
             colors = ButtonDefaults.outlinedButtonColors(
                 containerColor = Color.Transparent,
                 contentColor = AccentTeal
             ),
-            border = androidx.compose.foundation.BorderStroke(
-                width = 2.dp,
-                color = AccentTeal.copy(alpha = 0.3f)
+            border = ButtonDefaults.outlinedButtonBorder.copy(
+                width = 1.dp,
+                brush = Brush.horizontalGradient(
+                    colors = listOf(AccentTeal.copy(alpha = 0.4f), AccentTeal.copy(alpha = 0.4f))
+                )
             ),
-            shape = CircleShape
+            shape = RoundedCornerShape(50.dp)
         ) {
             Row(
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
                     imageVector = Icons.Default.Fingerprint,
                     contentDescription = null,
-                    modifier = Modifier.size(24.dp),
+                    modifier = Modifier.size(22.dp),
                     tint = AccentTeal
                 )
                 Text(
                     text = "BIOMETRIC LOGIN",
                     fontSize = 14.sp,
                     fontWeight = FontWeight.SemiBold,
+                    letterSpacing = 0.5.sp,
                     color = AccentTeal
                 )
             }
@@ -316,124 +403,43 @@ fun LoginFormSection(
 }
 
 @Composable
-fun FloatingLabelTextField(
-    value: String,
-    onValueChange: (String) -> Unit,
-    label: String,
-    placeholder: String,
-    keyboardType: KeyboardType = KeyboardType.Text,
-    modifier: Modifier = Modifier
-) {
-    Box(
-        modifier = modifier.fillMaxWidth()
+private fun OrDivider() {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        OutlinedTextField(
-            value = value,
-            onValueChange = onValueChange,
-            modifier = Modifier.fillMaxWidth(),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedTextColor = Color.White,
-                unfocusedTextColor = Color.White,
-                focusedBorderColor = Primary,
-                unfocusedBorderColor = Color.White.copy(alpha = 0.1f),
-                focusedLabelColor = Primary,
-                unfocusedLabelColor = Color(0xFF8E8E93),
-                cursorColor = Primary,
-                focusedContainerColor = Color.Transparent,
-                unfocusedContainerColor = Color.Transparent
-            ),
-            label = {
-                Text(
-                    text = label,
-                    fontSize = 10.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    letterSpacing = 0.5.sp
-                )
-            },
-            placeholder = {
-                Text(
-                    text = placeholder,
-                    color = Color.White.copy(alpha = 0.2f)
-                )
-            },
-            keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
-            singleLine = true,
-            shape = RoundedCornerShape(16.dp)
+        HorizontalDivider(
+            modifier = Modifier.weight(1f),
+            color = Color.White.copy(alpha = 0.08f),
+            thickness = 1.dp
+        )
+        Text(
+            text = "OR",
+            fontSize = 11.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color(0xFF8E8E93)
+        )
+        HorizontalDivider(
+            modifier = Modifier.weight(1f),
+            color = Color.White.copy(alpha = 0.08f),
+            thickness = 1.dp
         )
     }
 }
 
 @Composable
-fun FloatingLabelPasswordField(
-    value: String,
-    onValueChange: (String) -> Unit,
-    label: String,
-    placeholder: String,
-    passwordVisible: Boolean,
-    onVisibilityToggle: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Box(
-        modifier = modifier.fillMaxWidth()
-    ) {
-        OutlinedTextField(
-            value = value,
-            onValueChange = onValueChange,
-            modifier = Modifier.fillMaxWidth(),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedTextColor = Color.White,
-                unfocusedTextColor = Color.White,
-                focusedBorderColor = Primary,
-                unfocusedBorderColor = Color.White.copy(alpha = 0.1f),
-                focusedLabelColor = Primary,
-                unfocusedLabelColor = Color(0xFF8E8E93),
-                cursorColor = Primary,
-                focusedContainerColor = Color.Transparent,
-                unfocusedContainerColor = Color.Transparent
-            ),
-            label = {
-                Text(
-                    text = label,
-                    fontSize = 10.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    letterSpacing = 0.5.sp
-                )
-            },
-            placeholder = {
-                Text(
-                    text = placeholder,
-                    color = Color.White.copy(alpha = 0.2f)
-                )
-            },
-            visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-            singleLine = true,
-            shape = RoundedCornerShape(16.dp),
-            trailingIcon = {
-                IconButton(onClick = onVisibilityToggle) {
-                    Icon(
-                        imageVector = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
-                        contentDescription = if (passwordVisible) "Hide password" else "Show password",
-                        tint = Color(0xFF8E8E93)
-                    )
-                }
-            }
-        )
-    }
-}
-
-@Composable
-fun FooterSection(
-    onSignUpClick: () -> Unit
-) {
+private fun FooterSection(onSignUpClick: () -> Unit) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(32.dp),
-        modifier = Modifier.fillMaxWidth()
+        verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
+        // Sign up prompt
         Row(
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             Text(
                 text = "Don't have an account?",
@@ -442,7 +448,7 @@ fun FooterSection(
             )
             TextButton(
                 onClick = onSignUpClick,
-                contentPadding = PaddingValues(horizontal = 4.dp)
+                contentPadding = PaddingValues(horizontal = 4.dp, vertical = 2.dp)
             ) {
                 Text(
                     text = "Sign up",
@@ -452,70 +458,61 @@ fun FooterSection(
                 )
             }
         }
-        
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Security,
-                    contentDescription = null,
-                    tint = Color(0xFF8E8E93),
-                    modifier = Modifier.size(14.dp)
-                )
-                Text(
-                    text = "SECURE BY ROOM DB",
-                    fontSize = 9.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF8E8E93),
-                    letterSpacing = 0.sp
-                )
-            }
-            
-            Box(
-                modifier = Modifier
-                    .width(96.dp)
-                    .height(4.dp)
-                    .background(
-                        color = Color.White.copy(alpha = 0.05f),
-                        shape = CircleShape
-                    )
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth(0.33f)
-                        .fillMaxHeight()
-                        .background(Primary, CircleShape)
-                )
-            }
-        }
+
+        // Security badge - no spaces, uppercase
+        SecurityBadge()
     }
 }
 
 @Composable
-fun BoxScope.DecorativeBottomBar() {
-    Box(
-        modifier = Modifier
-            .align(Alignment.BottomCenter)
-            .padding(bottom = 16.dp)
-            .width(128.dp)
-            .height(4.dp)
-            .background(
-                color = Color.White.copy(alpha = 0.2f),
-                shape = CircleShape
+private fun SecurityBadge() {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Security,
+                contentDescription = null,
+                modifier = Modifier.size(14.dp),
+                tint = Color(0xFF6B6B6B)
             )
-    )
+            Text(
+                text = "SECUREBYROOMDB",
+                fontSize = 10.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = Color(0xFF6B6B6B),
+                letterSpacing = 0.5.sp
+            )
+        }
+
+        // Progress bar with red fill
+        Box(
+            modifier = Modifier
+                .width(80.dp)
+                .height(3.dp)
+                .background(
+                    color = Color.White.copy(alpha = 0.1f),
+                    shape = CircleShape
+                )
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(0.35f)
+                    .fillMaxHeight()
+                    .background(Primary, CircleShape)
+            )
+        }
+    }
 }
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
-fun LoginScreenPreview() {
-    MotionCamTheme {
+private fun LoginScreenPreview() {
+    MotionCamTheme(darkTheme = true) {
         LoginScreen()
     }
 }

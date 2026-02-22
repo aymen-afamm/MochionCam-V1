@@ -11,4 +11,7 @@
     <color name="splash_background">#121212</color>
     <color name="primary">#FF382E</color>
     <color name="accent_teal">#2EE5FF</color>
+    <color name="background_dark">#120807</color>
+    <color name="text_secondary">#8E8E93</color>
+    <color name="text_primary">#FFFFFF</color>
 </resources>

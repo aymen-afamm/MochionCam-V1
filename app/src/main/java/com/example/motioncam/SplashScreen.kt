@@ -28,6 +28,7 @@ import com.example.motioncam.ui.theme.AccentTeal
 import com.example.motioncam.ui.theme.BackgroundDark
 import com.example.motioncam.ui.theme.MotionCamTheme
 import com.example.motioncam.ui.theme.Primary
+import kotlinx.coroutines.delay
 
 @Composable
 fun SplashScreen(
