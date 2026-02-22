@@ -5,7 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import com.google.android.gms.maps.model.LatLng
+import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -23,43 +23,70 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.motioncam.data.OnboardingPreferences
 import com.example.motioncam.ui.theme.MotionCamTheme
 import kotlinx.coroutines.flow.first
 
+/**
+ * MainActivity - Entry point for the DashCam application
+ *
+ * Navigation Structure:
+ * - Splash -> Onboarding (if first launch) -> Login -> Home
+ * - Home is the main dashboard with recording button
+ * - Recording screen is full-screen dashcam interface
+ * - Gallery shows recorded videos
+ * - Settings for configuration
+ */
 class MainActivity : ComponentActivity() {
+
+    // Global Recording ViewModel - shared across all screens
+    private val recordingViewModel: RecordingViewModel by viewModels()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        
+
         setContent {
             MotionCamTheme(darkTheme = true) {
-                MotionCamApp()
+                MotionCamApp(recordingViewModel = recordingViewModel)
             }
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        // Clean up ViewModel resources
+        recordingViewModel.cleanup()
     }
 }
 
 @Composable
-fun MotionCamApp() {
+fun MotionCamApp(
+    recordingViewModel: RecordingViewModel
+) {
     val context = LocalContext.current
     val onboardingPrefs = remember { OnboardingPreferences(context) }
     val lifecycleOwner = LocalLifecycleOwner.current
-    
+
     var showOnboarding by remember { mutableStateOf<Boolean?>(null) }
     var currentScreen by remember { mutableStateOf<Screen>(Screen.Splash) }
-    
+
     // Check onboarding status on first launch
     LaunchedEffect(Unit) {
         val isCompleted = onboardingPrefs.isOnboardingCompleted.first()
         showOnboarding = !isCompleted
     }
-    
-    // Handle lifecycle to refresh onboarding status when app resumes
+
+    // Handle lifecycle
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_RESUME) {
-                // Refresh onboarding status when app comes to foreground
+            when (event) {
+                Lifecycle.Event.ON_RESUME -> {
+                    // Refresh any necessary state when app comes to foreground
+                    recordingViewModel.refreshVideos()
+                }
+                else -> {}
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
@@ -67,13 +94,13 @@ fun MotionCamApp() {
             lifecycleOwner.lifecycle.removeObserver(observer)
         }
     }
-    
+
     // Show splash while loading onboarding status
     if (showOnboarding == null) {
         SplashScreen(onTimeout = { })
         return
     }
-    
+
     // Navigation based on current screen state
     when (currentScreen) {
         Screen.Splash -> {
@@ -87,7 +114,7 @@ fun MotionCamApp() {
                 }
             )
         }
-        
+
         Screen.Onboarding -> {
             OnboardingScreen(
                 onFinish = {
@@ -95,7 +122,7 @@ fun MotionCamApp() {
                 }
             )
         }
-        
+
         Screen.Login -> {
             LoginScreen(
                 onLoginSuccess = {
@@ -109,70 +136,135 @@ fun MotionCamApp() {
                 }
             )
         }
-        
+
         Screen.Registration -> {
-            // Handle system back button - go back to Login
             BackHandler {
                 currentScreen = Screen.Login
             }
 
             RegistrationScreen(
                 onBackClick = {
-                    // Navigate back to Login
                     currentScreen = Screen.Login
                 },
                 onRegistrationSuccess = {
-                    // Navigate back to Login after successful registration
-                    // so user can sign in with their new credentials
                     currentScreen = Screen.Login
                 },
                 onLoginClick = {
-                    // Navigate back to Login screen
                     currentScreen = Screen.Login
                 }
             )
         }
-        
+
         Screen.Home -> {
-            // Handle system back button - exit app from home
             BackHandler {
-                // Exit app or show exit confirmation
                 (context as? ComponentActivity)?.finish()
             }
-            
+
             HomeScreen(
                 userName = "Alex",
+                isRecording = recordingViewModel.isRecording.collectAsStateWithLifecycle().value,
                 onStartRecording = {
-                    currentScreen = Screen.Camera
+                    recordingViewModel.startRecording()
+                    currentScreen = Screen.Recording
                 },
                 onViewAllClips = {
-                    // TODO: Navigate to full gallery
+                    currentScreen = Screen.Gallery
                 },
                 onClipClick = { clip ->
-                    // TODO: Open clip player
+                    // TODO: Open video player
                 },
                 onNavigateToGallery = {
-                    // TODO: Navigate to gallery screen
+                    currentScreen = Screen.Gallery
                 },
                 onNavigateToStats = {
-                    // TODO: Navigate to stats screen
+                    currentScreen = Screen.Stats
                 },
                 onNavigateToConfig = {
-                    // TODO: Navigate to settings/config screen
+                    currentScreen = Screen.Settings
                 }
             )
         }
-        
-        Screen.Camera -> {
-            // Handle system back button - return to Home
+
+        Screen.Recording -> {
+            BackHandler {
+                // Return to Home but keep recording running
+                currentScreen = Screen.Home
+            }
+
+            RecordingScreen(
+                viewModel = recordingViewModel,
+                onStopRecording = {
+                    currentScreen = Screen.Home
+                },
+                onNavigateToHome = {
+                    currentScreen = Screen.Home
+                },
+                onNavigateToGallery = {
+                    currentScreen = Screen.Gallery
+                },
+                onNavigateToStats = {
+                    currentScreen = Screen.Stats
+                },
+                onNavigateToConfig = {
+                    currentScreen = Screen.Settings
+                }
+            )
+        }
+
+        Screen.Gallery -> {
             BackHandler {
                 currentScreen = Screen.Home
             }
-            
-            CameraPlaceholderScreen(
-                onBackToHome = {
+
+            VideoLibraryScreen(
+                viewModel = recordingViewModel,
+                onStartRecording = {
+                    recordingViewModel.startRecording()
+                    currentScreen = Screen.Recording
+                },
+                onNavigateToHome = {
                     currentScreen = Screen.Home
+                },
+                onNavigateToGallery = {
+                    // Already on gallery
+                },
+                onNavigateToStats = {
+                    currentScreen = Screen.Stats
+                },
+                onNavigateToConfig = {
+                    currentScreen = Screen.Settings
                 }
+            )
+        }
+
+        Screen.Stats -> {
+            BackHandler {
+                currentScreen = Screen.Home
+            }
+
+            StatsPlaceholderScreen(
+                onBackToHome = { currentScreen = Screen.Home }
+            )
+        }
+
+        Screen.Settings -> {
+            BackHandler {
+                currentScreen = Screen.Home
+            }
+
+            SettingsPlaceholderScreen(
+                onBackToHome = { currentScreen = Screen.Home }
+            )
+        }
+
+        Screen.Camera -> {
+            // Legacy - redirect to Recording
+            BackHandler {
+                currentScreen = Screen.Home
+            }
+
+            CameraPlaceholderScreen(
+                onBackToHome = { currentScreen = Screen.Home }
             )
         }
     }
@@ -187,7 +279,71 @@ sealed class Screen {
     object Login : Screen()
     object Registration : Screen()
     object Home : Screen()
-    object Camera : Screen()
+    object Recording : Screen()
+    object Gallery : Screen()
+    object Stats : Screen()
+    object Settings : Screen()
+    object Camera : Screen() // Legacy - can be removed
+}
+
+/**
+ * Placeholder Stats Screen
+ */
+@Composable
+fun StatsPlaceholderScreen(
+    onBackToHome: () -> Unit = {}
+) {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = "Stats Screen - Coming Soon",
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White
+            )
+            Button(
+                onClick = onBackToHome,
+                modifier = Modifier.padding(top = 16.dp)
+            ) {
+                Text("Back to Home")
+            }
+        }
+    }
+}
+
+/**
+ * Placeholder Settings Screen
+ */
+@Composable
+fun SettingsPlaceholderScreen(
+    onBackToHome: () -> Unit = {}
+) {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = "Settings Screen - Coming Soon",
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White
+            )
+            Button(
+                onClick = onBackToHome,
+                modifier = Modifier.padding(top = 16.dp)
+            ) {
+                Text("Back to Home")
+            }
+        }
+    }
 }
 
 /**

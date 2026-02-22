@@ -144,6 +144,7 @@ fun HomeScreen(
     tripStats: TripStats = TripStats(),
     recentClips: List<VideoClip> = emptyList(),
     isCarMoving: Boolean = false,
+    isRecording: Boolean = false, // From ViewModel
     onStartRecording: () -> Unit = {},
     onViewAllClips: () -> Unit = {},
     onClipClick: (VideoClip) -> Unit = {},
@@ -151,9 +152,6 @@ fun HomeScreen(
     onNavigateToStats: () -> Unit = {},
     onNavigateToConfig: () -> Unit = {}
 ) {
-    // Recording state
-    var isRecording by remember { mutableStateOf(false) }
-    
     // Scroll state
     val scrollState = rememberScrollState()
     
@@ -274,11 +272,11 @@ fun HomeScreen(
                 Spacer(modifier = Modifier.height(32.dp))
             }
 
-            // Recording Button
+            // Recording Button - uses ViewModel state
             RecordingButton(
                 isRecording = isRecording,
                 onClick = {
-                    isRecording = !isRecording
+                    // Navigation and recording start handled by ViewModel in MainActivity
                     onStartRecording()
                 }
             )
@@ -977,7 +975,7 @@ private fun StorageIndicator(
  * This is the actual navigation content that sits inside the bottomBar slot
  */
 @Composable
-private fun Material3BottomNavigationContent(
+internal fun Material3BottomNavigationContent(
     currentRoute: String,
     onNavigateToHome: () -> Unit,
     onNavigateToGallery: () -> Unit,
@@ -1030,7 +1028,7 @@ private fun Material3BottomNavigationContent(
 }
 
 @Composable
-private fun Material3NavItem(
+internal fun Material3NavItem(
     icon: ImageVector,
     label: String,
     isSelected: Boolean,
